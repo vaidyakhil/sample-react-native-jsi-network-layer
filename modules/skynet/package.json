@@ -1,0 +1,9 @@
+{
+  "name": "react-native-skynet",
+  "version": "0.0.0",
+  "description": "jsi based networking library for react-native",
+  "main": "src/index",
+  "author": "vaidyakhil@gmail.com",
+  "license": "UNLICENSED",
+  "homepage": "#readme"
+}

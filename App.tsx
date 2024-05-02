@@ -9,6 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 
+import { Skynet } from 'react-native-skynet'
+
 // const __temp = Array.from({length: 20}, (_, index) => index);
 // const performExperiment = async (type: 'native' | 'turbo') => {
 //   for (const __index of __temp) {
@@ -59,7 +61,8 @@ const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAg
 };
 
 const makeNetworkCallViaJSI = async () => {
-  console.log('makeNetworkCallViaJSI executed');
+  const respose = await Skynet.multiply(2,3)
+  console.log('Skynet: ', respose );
 }
 
 const makeNetworkCallViaFetch = async () => {
