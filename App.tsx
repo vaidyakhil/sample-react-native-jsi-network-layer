@@ -61,8 +61,8 @@ const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAg
 };
 
 const makeNetworkCallViaJSI = async () => {
-  const respose = await Skynet.multiply(2,3)
-  console.log('Skynet: ', respose );
+  const respose = await Skynet.makeRequest();
+  console.log('Skynet: makeNetworkCallViaJSI::ended =>\n', JSON.stringify(respose));
 }
 
 const makeNetworkCallViaFetch = async () => {
