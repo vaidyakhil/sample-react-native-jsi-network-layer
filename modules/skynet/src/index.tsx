@@ -18,6 +18,8 @@ const SkynetNativeModule = NativeModules.Skynet
       },
     );
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
 // Extend the Global interface to add a custom method
 const Skynet: NetworkModule = {
   init: () => {
@@ -28,10 +30,26 @@ const Skynet: NetworkModule = {
   },
 
   makeRequest: () => {
-    return new Promise((resolve, __reject) => {
-      skynet_rn_jsi_makeRequest(function (response) {
-        resolve(response);
-      });
+    start = Date.now();
+    return skynet_rn_jsi_makeRequest('something');
+  },
+
+  sendRequest: async () => {
+    return new Promise((resolve, reject) => {
+      skynet_rn_jsi_sendRequest(
+        {
+          skynet_rn_jsi_uniqueId: `skynet_rn_jsi_sendRequest_${Date.now()}`,
+        },
+        (responseData, errorData) => {
+          if (responseData) {
+            // do some data massaging before returning
+            resolve(responseData);
+          } else {
+            // if want to never reject, resolve here as well with helpful error data
+            reject(errorData);
+          }
+        },
+      );
     });
   },
 };

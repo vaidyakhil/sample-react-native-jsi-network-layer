@@ -19,6 +19,14 @@ import { Skynet } from 'react-native-skynet'
 //   }
 // };
 
+let global_start = null;
+let global_end = null;
+global.function_set_from_js = response => {
+  global_end = Date.now();
+  const diff = global_end - global_start;
+  console.info(`jsi::callback => ${diff}ms | response type: ${typeof response}`);
+};
+
 const COLORS = {
   JSI: '#83fa7d',
   BRIDGE: '#42b3f5'
@@ -61,12 +69,11 @@ const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAg
 };
 
 const makeNetworkCallViaJSI = async () => {
-  const respose = await Skynet.makeRequest();
-  console.log('Skynet: makeNetworkCallViaJSI::ended =>\n', JSON.stringify(respose));
+  return await Skynet.sendRequest();
 }
 
 const makeNetworkCallViaFetch = async () => {
-  console.log('makeNetworkCallViaFetch executed');
+  return await fetch('https://metrics.cocoapods.org/api/v1/pods/CocoaAsyncSocket');
 }
 
 const getFunctionWithMeasures = (originalApi: Function) => {
@@ -123,13 +130,24 @@ const App = () => {
       appendResponse({ type: 'bridge', roundTrip: wrappedResponse.measure.timeTaken })
     }
 
+    const jsiCallbackButtonClick = async () => {
+      global_start = Date.now();
+      Skynet.makeRequest();
+    }
+
     return (
       <View style={styles.buttonHolder}>
         <TouchableOpacity
           onPress={jsiButtonClick}
           style={[styles.button, { backgroundColor: COLORS.JSI }]}>
-          <Text>JSI Module</Text>
+          <Text>JSI:Promise</Text>
         </TouchableOpacity>
+{/* 
+        <TouchableOpacity
+          onPress={jsiCallbackButtonClick}
+          style={[styles.button, { backgroundColor: COLORS.JSI }]}>
+          <Text>JSI:Callback</Text>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           onPress={bridgeButtonClick}

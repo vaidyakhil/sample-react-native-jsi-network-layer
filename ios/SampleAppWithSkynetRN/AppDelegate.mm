@@ -19,13 +19,13 @@
     #if DEBUG
         #if TARGET_IPHONE_SIMULATOR
           // Run from locally running dev server
-                    return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
+          return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
       #else
             // Run on device with code coming from dev server on PC (change the hostname/IP to your PCs hostname/IP)
-        return [NSURL URLWithString:@"http://192.168.1.9:8081/index.bundle?platform=ios&dev=true"];
+        return [NSURL URLWithString:@"http://192.168.29.193:8081/index.bundle?platform=ios&dev=true"];
       #endif
     #else
-      return [CodePush bundleURL];
+      return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
     #endif
 }
 

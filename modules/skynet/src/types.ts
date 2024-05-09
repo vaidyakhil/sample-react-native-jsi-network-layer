@@ -9,6 +9,8 @@ type NetworkModule = {
    * @returns {string}
    */
   makeRequest: () => Promise<string>;
+
+  sendRequest: () => Promise<any>;
 };
 
 /**

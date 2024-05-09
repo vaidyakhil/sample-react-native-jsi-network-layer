@@ -1,7 +1,3 @@
-/**
- * @format
- */
-
 if (__DEV__) {
   const customSpyMethod = info => {
     if (
@@ -17,7 +13,7 @@ if (__DEV__) {
     );
   };
   const MessageQueue = require('react-native/Libraries/BatchedBridge/MessageQueue');
-  MessageQueue.spy(customSpyMethod);
+  MessageQueue.spy(false);
 }
 
 import {AppRegistry} from 'react-native';

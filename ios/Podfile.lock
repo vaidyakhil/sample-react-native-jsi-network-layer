@@ -377,7 +377,10 @@ PODS:
     - glog
   - react-native-skynet (0.0.0):
     - RCT-Folly (= 2021.07.22.00)
+    - React
+    - React-callinvoker
     - React-Core
+    - ReactCommon
   - React-NativeModulesApple (0.72.5):
     - hermes-engine
     - React-callinvoker
@@ -468,6 +471,21 @@ PODS:
     - glog
     - RCT-Folly (= 2021.07.22.00)
     - React-debug
+  - ReactCommon (0.72.5):
+    - React-logger (= 0.72.5)
+    - ReactCommon/turbomodule (= 0.72.5)
+  - ReactCommon/turbomodule (0.72.5):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2021.07.22.00)
+    - React-callinvoker (= 0.72.5)
+    - React-cxxreact (= 0.72.5)
+    - React-jsi (= 0.72.5)
+    - React-logger (= 0.72.5)
+    - React-perflogger (= 0.72.5)
+    - ReactCommon/turbomodule/bridging (= 0.72.5)
+    - ReactCommon/turbomodule/core (= 0.72.5)
   - ReactCommon/turbomodule/bridging (0.72.5):
     - DoubleConversion
     - glog
@@ -693,7 +711,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-skynet: 4f8970a5a5c2e61cc95b726255e0faede9ed4347
+  react-native-skynet: 09af394dbdb396acfbab6369ac62deba08255c25
   React-NativeModulesApple: 797bc6078d566eef3fb3f74127e6e1d2e945a15f
   React-perflogger: cd8886513f68e1c135a1e79d20575c6489641597
   React-RCTActionSheet: 726d2615ca62a77ce3e2c13d87f65379cdc73498

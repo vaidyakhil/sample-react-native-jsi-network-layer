@@ -1,10 +1,11 @@
 #import "Skynet.h"
 #import "SkynetJsiBindings.hpp"
 #include "iostream"
-#import "jsi/jsi.h"
+#import <jsi/jsi.h>
 #import "networkModule/NetworkModule.h"
 #import <React/RCTBridge+Private.h>
 #import <React/RCTUtils.h>
+#import <ReactCommon/RCTTurboModule.h>
 
 @implementation Skynet {
   NetworkModule *networkModuleInstance;
@@ -36,6 +37,7 @@ RCT_EXPORT_MODULE()
 //  bridge.runtime becomes available.
 - (void)setBridge:(RCTBridge *)bridge {
   _bridge = bridge;
+  auto jsCallInvoker = bridge.jsCallInvoker;
   _setBridgeOnMainQueue = RCTIsMainQueue();
 
   RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
@@ -44,6 +46,6 @@ RCT_EXPORT_MODULE()
     return;
   }
 
-  installJsiBindings(*(jsi::Runtime *)cxxBridge.runtime, networkModuleInstance);
+  installJsiBindings(*(jsi::Runtime *)cxxBridge.runtime, networkModuleInstance, jsCallInvoker);
 }
 @end
