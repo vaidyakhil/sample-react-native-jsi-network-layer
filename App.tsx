@@ -4,12 +4,16 @@ import {
   View,
   Text,
   TouchableOpacity,
-  NativeModules,
   ScrollView,
   StyleSheet,
 } from 'react-native';
 
 import { Skynet } from 'react-native-skynet'
+import { JsiHttp } from 'react-native-jsi-cpr';
+const cprHttpClient = new JsiHttp({
+  baseUrl: 'https://metrics.cocoapods.org',
+  timeout: 1000,
+}, /*isDebug*/ __DEV__)
 
 // const __temp = Array.from({length: 20}, (_, index) => index);
 // const performExperiment = async (type: 'native' | 'turbo') => {
@@ -29,11 +33,12 @@ global.function_set_from_js = response => {
 
 const COLORS = {
   JSI: '#83fa7d',
-  BRIDGE: '#42b3f5'
+  BRIDGE: '#42b3f5',
+  CPR: '#fcf803'
 }
 
 type TimeDiffData = {
-  type: 'jsi' | 'bridge';
+  type: 'jsi' | 'bridge' | 'cpr';
   roundTrip: number;
 }
 
@@ -42,8 +47,12 @@ type ModuleAggregateData = {
   averageTime: number
 }
 
-const AggregateData: { jsi: ModuleAggregateData, bridge: ModuleAggregateData } = {
+const AggregateData: { jsi: ModuleAggregateData, bridge: ModuleAggregateData, cpr: ModuleAggregateData } = {
   jsi: {
+    numberOfTrips: 0,
+    averageTime: 0
+  },
+  cpr: {
     numberOfTrips: 0,
     averageTime: 0
   },
@@ -53,12 +62,16 @@ const AggregateData: { jsi: ModuleAggregateData, bridge: ModuleAggregateData } =
   }
 };
 
-const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAggregateData, bridge: ModuleAggregateData } }) => {
+const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAggregateData, bridge: ModuleAggregateData, cpr: ModuleAggregateData } }) => {
   return (
     <View style={{ backgroundColor: '#FFFFFF', paddingVertical: 8, paddingHorizontal: 8, rowGap: 8, marginVertical: 2 }}>
       <Text
         style={{ ...styles.dataStrip, backgroundColor: COLORS.JSI }}>
-        JSI Avg Time => {aggregateData['jsi'].averageTime} in {aggregateData['jsi'].numberOfTrips} trips:{' '}
+        JSI:Custom Avg Time => {aggregateData['jsi'].averageTime} in {aggregateData['jsi'].numberOfTrips} trips:{' '}
+      </Text>
+      <Text
+        style={{ ...styles.dataStrip, backgroundColor: COLORS.CPR }}>
+        JSI:CPR Avg Time => {aggregateData['cpr'].averageTime} in {aggregateData['cpr'].numberOfTrips} trips:{' '}
       </Text>
       <Text
         style={{ ...styles.dataStrip, backgroundColor: COLORS.BRIDGE }}>
@@ -70,6 +83,10 @@ const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAg
 
 const makeNetworkCallViaJSI = async () => {
   return await Skynet.sendRequest();
+}
+
+const makeNetworkCallViaCPR = async () => {
+  return await cprHttpClient.get('api/v1/pods/CocoaAsyncSocket');
 }
 
 const makeNetworkCallViaFetch = async () => {
@@ -97,7 +114,7 @@ const getFunctionWithMeasures = (originalApi: Function) => {
 }
 
 
-const updateAggregateData = (type: 'jsi' | 'bridge', newTimeDiff: number) => {
+const updateAggregateData = (type: 'jsi' | 'bridge' | 'cpr', newTimeDiff: number) => {
   const updatedModuleData = {
     numberOfTrips: AggregateData[type].numberOfTrips + 1,
     averageTime: (AggregateData[type].averageTime*AggregateData[type].numberOfTrips + newTimeDiff)/(AggregateData[type].numberOfTrips + 1)
@@ -122,6 +139,14 @@ const App = () => {
       appendResponse({ type: 'jsi', roundTrip: wrappedResponse.measure.timeTaken })
     }
 
+    const cprButtonClick = async () => {
+      makeNetworkCallViaCPR.typeOfCommLayer = 'cpr';
+      const callApi = getFunctionWithMeasures(makeNetworkCallViaCPR);
+
+      const wrappedResponse = await callApi()
+      appendResponse({ type: 'cpr', roundTrip: wrappedResponse.measure.timeTaken })
+    }
+
     const bridgeButtonClick = async () => {
       makeNetworkCallViaFetch.typeOfCommLayer = 'bridge';
       const callApi = getFunctionWithMeasures(makeNetworkCallViaFetch);
@@ -140,14 +165,14 @@ const App = () => {
         <TouchableOpacity
           onPress={jsiButtonClick}
           style={[styles.button, { backgroundColor: COLORS.JSI }]}>
-          <Text>JSI:Promise</Text>
+          <Text>JSI:Custom</Text>
         </TouchableOpacity>
-{/* 
+
         <TouchableOpacity
-          onPress={jsiCallbackButtonClick}
-          style={[styles.button, { backgroundColor: COLORS.JSI }]}>
-          <Text>JSI:Callback</Text>
-        </TouchableOpacity> */}
+          onPress={cprButtonClick}
+          style={[styles.button, { backgroundColor: COLORS.CPR }]}>
+          <Text>JSI:CPR</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={bridgeButtonClick}
@@ -170,7 +195,7 @@ const App = () => {
       <ScrollView>
         {timeDiffs.map(({type, roundTrip}, index) => (
           <View
-            style={[styles.dataStrip, { backgroundColor: type === 'jsi' ? COLORS.JSI : COLORS.BRIDGE }]}
+            style={[styles.dataStrip, { backgroundColor: type === 'jsi' ? COLORS.JSI : (type === 'bridge' ? COLORS.BRIDGE : COLORS.CPR) }]}
             key={`roundTrip-${index}`}>
             <Text>{type.toUpperCase()}: </Text>
             <Text style={{ fontWeight: 'bold' }}>{roundTrip}ms</Text>

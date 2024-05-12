@@ -1,0 +1,28 @@
+diff --git a/node_modules/react-native-jsi-cpr/cpp/JsiHttp.cpp b/node_modules/react-native-jsi-cpr/cpp/JsiHttp.cpp
+index f8802ad..6c8c3dc 100644
+--- a/node_modules/react-native-jsi-cpr/cpp/JsiHttp.cpp
++++ b/node_modules/react-native-jsi-cpr/cpp/JsiHttp.cpp
+@@ -15,7 +15,9 @@ JsiHttp::JsiHttp(
+           jsCallInvoker_(std::move(jsCallInvoker)) {}
+ 
+ void JsiHttp::installJSIBindings(std::string cPath) {
+-    this->certPath = cPath;
++    // to support charles http(s) proxy to intercept and mock responses
++    // and better benchmark performance
++    // this->certPath = cPath;
+     
+     //MARK: makeHttpRequest
+     auto makeHttpRequest = jsi::Function::createFromHostFunction(
+@@ -145,6 +147,12 @@ void JsiHttp::makeRequest(const string& uniqueId,
+     std::shared_ptr<cpr::Session> session = std::make_shared<cpr::Session>();
+     jsiHttp::EnableOrDisableSSLVerification(this->certPath, session);
+     
++    session->SetOption(
++                       cpr::Proxies{
++                         {"http", "http://192.168.29.193:8888"},
++                         {"https", "http://192.168.29.193:8888"}
++                       }
++   );
+     session->SetOption(cpr::Url{baseUrl + endpoint});
+     session->SetTimeout(time);
+     if (body != nullptr) session->SetBody(std::move(*body));
