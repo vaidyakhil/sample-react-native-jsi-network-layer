@@ -20,7 +20,6 @@ const SkynetNativeModule = NativeModules.Skynet
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-// Extend the Global interface to add a custom method
 const Skynet: NetworkModule = {
   init: () => {
     console.log(

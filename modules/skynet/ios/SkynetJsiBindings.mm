@@ -31,67 +31,6 @@ std::map<std::string, std::shared_ptr<facebook::jsi::Function>>
     global_callbacks;
 std::shared_ptr<facebook::react::CallInvoker> global_jsCallInvoker;
 
-// void installMakeRequest(facebook::jsi::Runtime &jsiRuntime,
-//                         NetworkModule *networkModule) {
-//   std::cout << "SkynetJsiBindings: installMakeRequest" << std::endl;
-//
-//   facebook::jsi::Function makeRequest = Function::createFromHostFunction(
-//       jsiRuntime, PropNameID::forAscii(jsiRuntime, "makeRequest"), 0,
-//       [networkModule](Runtime &runtime, const Value &thisValue,
-//                       const Value *arguments, size_t count) -> Value {
-//         void (^callbackCallingJsCallback)(NSDictionary *dictionaryResponse) =
-//             ^(NSDictionary *dictionaryResponse) {
-//               // when trying to get callback per request work
-//               //              jsMethodInvoker->invokeAsync([&runtime,
-//               //              &jsResponseObj, arguments] {
-//               // arguments[0].asObject(runtime).asFunction(runtime).call(
-//               //                    runtime, Value(runtime, jsResponseObj));
-//               //              });
-//
-//               // when checking with callback method
-//               jsMethodInvoker->invokeAsync([&runtime, dictionaryResponse] {
-//                 runtime.global()
-//                     .getPropertyAsObject(runtime, "function_set_from_js")
-//                     .asFunction(runtime)
-//                     .call(runtime,
-//                           Value(runtime, convertNSDictionaryToJSIObject(
-//                                              runtime, dictionaryResponse)));
-//               });
-//             };
-//
-//         void (^networkModuleCompletionCallback)(
-//             NSData *_Nullable, NSURLResponse *_Nullable, NSError *_Nullable)
-//             =
-//             ^(NSData *_Nullable data, NSURLResponse *_Nullable response,
-//               NSError *_Nullable error) {
-//               if (error) {
-//                 NSLog(@"Error: %@", error);
-//                 return;
-//               }
-//
-//               if (!data) {
-//                 NSLog(@"No data");
-//                 return;
-//               }
-//
-//               NSDictionary *dictionary = [NSJSONSerialization
-//                   JSONObjectWithData:data
-//                              options:NSJSONReadingMutableContainers
-//                                error:nil];
-//
-//               callbackCallingJsCallback(dictionary);
-//             };
-//         [networkModule makeRequest:networkModuleCompletionCallback];
-//
-//         return Value();
-//       });
-//
-//   jsiRuntime.global().setProperty(
-//       jsiRuntime,
-//       facebook::jsi::String::createFromUtf8(jsiRuntime,
-//       MAKE_REQUEST_METHOD_ID), std::move(makeRequest));
-// }
-
 void sendToJS(Runtime &runtime, std::string uniqueId,
               NSDictionary *responseDictionary) {
   global_jsCallInvoker->invokeAsync([=, &runtime]() {

@@ -26,17 +26,14 @@
 - (void)makeRequest:
     (void (^_Nonnull)(NSData *_Nullable data, NSURLResponse *_Nullable response,
                       NSError *_Nullable error))completionHandler {
-
-  NSLog(@"NetworkModule::makeRequest start", NSDate.now);
   NSURL *url =
       [NSURL URLWithString:
                  @"https://metrics.cocoapods.org/api/v1/pods/CocoaAsyncSocket"];
   NSURLSessionDataTask *task = [self.session dataTaskWithURL:url
                                            completionHandler:completionHandler];
 
-  NSLog(@"NetworkModule::makeRequest before calling resume", NSDate.now);
+
   [task resume];
-  NSLog(@"NetworkModule::makeRequest after calling resume", NSDate.now);
 }
 
 @end

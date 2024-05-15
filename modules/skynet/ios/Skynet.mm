@@ -30,11 +30,6 @@ RCT_EXPORT_MODULE()
   return self;
 }
 
-// We are getting an instance of bridge which we will use to get the runtime and
-// install our jsi bindings.
-//  Inside it we are checking if bridge.runtime exists or not.
-//  If it does not, we are waiting for sometime and then trying again until the
-//  bridge.runtime becomes available.
 - (void)setBridge:(RCTBridge *)bridge {
   _bridge = bridge;
   auto jsCallInvoker = bridge.jsCallInvoker;

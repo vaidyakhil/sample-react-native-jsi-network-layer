@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
 } from 'react-native';
 
@@ -13,15 +12,7 @@ import { JsiHttp } from 'react-native-jsi-cpr';
 const cprHttpClient = new JsiHttp({
   baseUrl: 'https://metrics.cocoapods.org',
   timeout: 1000,
-}, /*isDebug*/ __DEV__)
-
-// const __temp = Array.from({length: 20}, (_, index) => index);
-// const performExperiment = async (type: 'native' | 'turbo') => {
-//   for (const __index of __temp) {
-//     const newReponse = await makeNetworkCall(type);
-//     appendResponse(newReponse);
-//   }
-// };
+}, __DEV__)
 
 let global_start = null;
 let global_end = null;
@@ -31,10 +22,12 @@ global.function_set_from_js = response => {
   console.info(`jsi::callback => ${diff}ms | response type: ${typeof response}`);
 };
 
+
+const MODULE_TYPES = ['jsi', 'cpr', 'bridge'];
 const COLORS = {
-  JSI: '#83fa7d',
-  BRIDGE: '#42b3f5',
-  CPR: '#fcf803'
+  jsi: '#83fa7d',
+  bridge: '#42b3f5',
+  cpr: '#fcf803'
 }
 
 type TimeDiffData = {
@@ -66,52 +59,52 @@ const AggregateDataHolder = ({ aggregateData }: { aggregateData: { jsi: ModuleAg
   return (
     <View style={{ backgroundColor: '#FFFFFF', paddingVertical: 8, paddingHorizontal: 8, rowGap: 8, marginVertical: 2 }}>
       <Text
-        style={{ ...styles.dataStrip, backgroundColor: COLORS.JSI }}>
-        JSI:Custom Avg Time => {aggregateData['jsi'].averageTime} in {aggregateData['jsi'].numberOfTrips} trips:{' '}
+        style={{ ...styles.dataStrip, backgroundColor: COLORS.jsi }}>
+        jsi:Custom Avg Time => {aggregateData['jsi'].averageTime} in {aggregateData['jsi'].numberOfTrips} trips:{' '}
       </Text>
       <Text
-        style={{ ...styles.dataStrip, backgroundColor: COLORS.CPR }}>
-        JSI:CPR Avg Time => {aggregateData['cpr'].averageTime} in {aggregateData['cpr'].numberOfTrips} trips:{' '}
+        style={{ ...styles.dataStrip, backgroundColor: COLORS.cpr }}>
+        jsi:cpr Avg Time => {aggregateData['cpr'].averageTime} in {aggregateData['cpr'].numberOfTrips} trips:{' '}
       </Text>
       <Text
-        style={{ ...styles.dataStrip, backgroundColor: COLORS.BRIDGE }}>
+        style={{ ...styles.dataStrip, backgroundColor: COLORS.bridge }}>
         Bridge Avg Time => {aggregateData['bridge'].averageTime} in {aggregateData['bridge'].numberOfTrips} trips:{' '}
       </Text>
     </View>
   );
 };
 
-const makeNetworkCallViaJSI = async () => {
-  return await Skynet.sendRequest();
-}
+  const makeNetworkCallViaJSI = async () => {
+    return await Skynet.sendRequest();
+  }
 
-const makeNetworkCallViaCPR = async () => {
-  return await cprHttpClient.get('api/v1/pods/CocoaAsyncSocket');
-}
+  const makeNetworkCallViaCPR = async () => {
+    return await cprHttpClient.get('api/v1/pods/CocoaAsyncSocket');
+  }
 
-const makeNetworkCallViaFetch = async () => {
-  return await fetch('https://metrics.cocoapods.org/api/v1/pods/CocoaAsyncSocket');
-}
+  const makeNetworkCallViaFetch = async () => {
+    return await fetch('https://metrics.cocoapods.org/api/v1/pods/CocoaAsyncSocket');
+  }
 
-const getFunctionWithMeasures = (originalApi: Function) => {
-  return async (...args) => {
-    const start = Date.now();
-    const originalResponse = await originalApi(...args);
-    const end = Date.now();
-    const diff = end - start;
+  const getFunctionWithMeasures = (originalApi: Function) => {
+    return async (...args) => {
+      const start = Date.now();
+      const originalResponse = await originalApi(...args);
+      const end = Date.now();
+      const diff = end - start;
 
-    if (__DEV__) {
-      console.info(`${originalApi.typeOfCommLayer}: ${diff}ms | response type: ${typeof originalResponse}`);
-    }
+      if (__DEV__) {
+        console.info(`${originalApi.typeOfCommLayer}: ${diff}ms | response type: ${typeof originalResponse}`);
+      }
 
-    return {
-      response: originalResponse,
-      measure: {
-        timeTaken: diff
+      return {
+        response: originalResponse,
+        measure: {
+          timeTaken: diff
+        }
       }
     }
   }
-}
 
 
 const updateAggregateData = (type: 'jsi' | 'bridge' | 'cpr', newTimeDiff: number) => {
@@ -122,37 +115,109 @@ const updateAggregateData = (type: 'jsi' | 'bridge' | 'cpr', newTimeDiff: number
   AggregateData[type] = updatedModuleData;
 }
 
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
 const App = () => {
   const [timeDiffs, setTimeDiffs] = useState<TimeDiffData[]>([]);
+  const [dummy, triggerRender] = useState(false);
+  const moduleUnderExperiment = React.useRef(MODULE_TYPES[0]);
 
   const appendResponse = (timeDiffs: TimeDiffData) => {
     updateAggregateData(timeDiffs.type, timeDiffs.roundTrip);
-    setTimeDiffs(prevTimeDiffs => [...prevTimeDiffs, timeDiffs]);
+    triggerRender((prev) => !prev);
   };
+
+  React.useEffect(() => {
+
+    const runExperiment = async () => {
+      const jsiButtonClick = async () => {
+        makeNetworkCallViaJSI.typeOfCommLayer = 'jsi';
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaJSI);
+  
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'jsi', roundTrip: wrappedResponse.measure.timeTaken })
+      }
+  
+      const cprButtonClick = async () => {
+        makeNetworkCallViaCPR.typeOfCommLayer = 'cpr';
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaCPR);
+  
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'cpr', roundTrip: wrappedResponse.measure.timeTaken })
+      }
+  
+      const bridgeButtonClick = async () => {
+        makeNetworkCallViaFetch.typeOfCommLayer = 'bridge';
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaFetch);
+  
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'bridge', roundTrip: wrappedResponse.measure.timeTaken })
+      }
+
+      const moduleCallMap = {
+        jsi: jsiButtonClick,
+        cpr: cprButtonClick,
+        bridge: bridgeButtonClick
+      };
+
+      await delay(5000);
+
+      for (let idx = 0; idx < MODULE_TYPES.length; idx++) {
+          moduleUnderExperiment.current = MODULE_TYPES[idx];
+          let iter = 0;
+          while(iter < 600) {
+            await moduleCallMap[MODULE_TYPES[idx]]();
+            await delay(200);
+            iter++;
+          }
+      }
+    }
+
+    runExperiment();
+  }, [])
 
   const ButtonsHolder = () => {
     const jsiButtonClick = async () => {
       makeNetworkCallViaJSI.typeOfCommLayer = 'jsi';
-      const callApi = getFunctionWithMeasures(makeNetworkCallViaJSI);
+      let iter = 0;
+      while(iter < 600) {
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaJSI);
 
-      const wrappedResponse = await callApi()
-      appendResponse({ type: 'jsi', roundTrip: wrappedResponse.measure.timeTaken })
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'jsi', roundTrip: wrappedResponse.measure.timeTaken })
+
+        await delay(200);
+        iter++;
+      }
+
     }
 
     const cprButtonClick = async () => {
       makeNetworkCallViaCPR.typeOfCommLayer = 'cpr';
-      const callApi = getFunctionWithMeasures(makeNetworkCallViaCPR);
+      let iter = 0;
+      while(iter < 600) {
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaCPR);
 
-      const wrappedResponse = await callApi()
-      appendResponse({ type: 'cpr', roundTrip: wrappedResponse.measure.timeTaken })
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'cpr', roundTrip: wrappedResponse.measure.timeTaken })
+        await delay(200);
+        iter++;
+      }
     }
 
     const bridgeButtonClick = async () => {
       makeNetworkCallViaFetch.typeOfCommLayer = 'bridge';
-      const callApi = getFunctionWithMeasures(makeNetworkCallViaFetch);
+      let iter = 0;
+      while(iter < 600) {
+        const callApi = getFunctionWithMeasures(makeNetworkCallViaFetch);
 
-      const wrappedResponse = await callApi()
-      appendResponse({ type: 'bridge', roundTrip: wrappedResponse.measure.timeTaken })
+        const wrappedResponse = await callApi()
+        appendResponse({ type: 'bridge', roundTrip: wrappedResponse.measure.timeTaken })
+        await delay(200);
+        iter++;
+      }
     }
 
     const jsiCallbackButtonClick = async () => {
@@ -164,19 +229,19 @@ const App = () => {
       <View style={styles.buttonHolder}>
         <TouchableOpacity
           onPress={jsiButtonClick}
-          style={[styles.button, { backgroundColor: COLORS.JSI }]}>
-          <Text>JSI:Custom</Text>
+          style={[styles.button, { backgroundColor: COLORS.jsi }]}>
+          <Text>jsi:Custom</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={cprButtonClick}
-          style={[styles.button, { backgroundColor: COLORS.CPR }]}>
-          <Text>JSI:CPR</Text>
+          style={[styles.button, { backgroundColor: COLORS.cpr }]}>
+          <Text>jsi:cpr</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={bridgeButtonClick}
-          style={[styles.button, { backgroundColor: COLORS.BRIDGE }]}>
+          style={[styles.button, { backgroundColor: COLORS.bridge }]}>
           <Text>Bridge Module</Text>
         </TouchableOpacity>
       </View>
@@ -191,18 +256,13 @@ const App = () => {
       }}>
 
       <AggregateDataHolder aggregateData={AggregateData} />
-
-      <ScrollView>
-        {timeDiffs.map(({type, roundTrip}, index) => (
-          <View
-            style={[styles.dataStrip, { backgroundColor: type === 'jsi' ? COLORS.JSI : (type === 'bridge' ? COLORS.BRIDGE : COLORS.CPR) }]}
-            key={`roundTrip-${index}`}>
-            <Text>{type.toUpperCase()}: </Text>
-            <Text style={{ fontWeight: 'bold' }}>{roundTrip}ms</Text>
-          </View>
-        ))}
-      </ScrollView>
-      <ButtonsHolder />
+        <View style={{ marginVertical: 64}}>
+          <Text
+            style={{ ...styles.dataStrip, backgroundColor: COLORS[moduleUnderExperiment.current] }}>
+            Module Under Experiment: {moduleUnderExperiment.current.toUpperCase()}
+          </Text>
+        </View>
+        <ButtonsHolder />
     </View>
   );
 };
